@@ -25,11 +25,17 @@ export interface PlatedHoleBuilder {
             outer_width?: Type.Dimension
             outer_height?: Type.Dimension
             hole_diameter?: Type.Dimension
+            inner_diameter?: Type.Dimension
+            innerDiameter?: Type.Dimension
             hole_width?: Type.Dimension
+            inner_width?: Type.Dimension
+            innerWidth?: Type.Dimension
             hole_height?: Type.Dimension
+            inner_height?: Type.Dimension
+            innerHeight?: Type.Dimension
             x: Type.Dimension
             y: Type.Dimension
-            shape: "circle" | "oval" | "pill"
+            shape?: "circle" | "oval" | "pill"
           }
         >
       | Partial<PlatedHoleProps>
@@ -66,7 +72,25 @@ export class PlatedHoleBuilderClass implements PlatedHoleBuilder {
   }
 
   async build(bc: BuildContext): Promise<PCBPlatedHole[]> {
-    if (this.shape === "circle" || (!this.shape && this.outer_diameter)) {
+    if (
+      this.shape === "circle" ||
+      (!this.shape && !this.outer_width && !this.outer_height)
+    ) {
+      if (this.hole_diameter == null && this.outer_diameter == null) {
+        throw new Error(
+          "platedhole should have both an inner diameter (hole_diameter) and an outer diameter (outer_diameter)"
+        )
+      }
+      if (this.hole_diameter == null) {
+        throw new Error(
+          "platedhole: missing inner diameter (hole_diameter / holeDiameter)"
+        )
+      }
+      if (this.outer_diameter == null) {
+        throw new Error(
+          "platedhole: missing outer diameter (outer_diameter / outerDiameter)"
+        )
+      }
       return [
         {
           type: "pcb_plated_hole",
@@ -90,7 +114,7 @@ export class PlatedHoleBuilderClass implements PlatedHoleBuilder {
         outer_height: bc.convert(this.outer_height!),
         hole_width: bc.convert(this.hole_width ?? this.hole_diameter!),
         hole_height: bc.convert(this.hole_height ?? this.hole_diameter!),
-        shape: this.shape,
+        shape: this.shape ?? "oval",
         port_hints: this.port_hints,
       },
     ]
